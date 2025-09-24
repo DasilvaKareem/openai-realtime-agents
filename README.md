@@ -1,19 +1,19 @@
 # Realtime API Agents Demo
 
-This is a demonstration of more advanced patterns for voice agents, using the OpenAI Realtime API and the OpenAI Agents SDK. 
+This is a demonstration of more advanced patterns for voice agents, using the Keneru Realtime API and the Keneru Agents SDK. 
 
-## About the OpenAI Agents SDK
+## About the Keneru Agents SDK
 
-This project uses the [OpenAI Agents SDK](https://github.com/openai/openai-agents-js), a toolkit for building, managing, and deploying advanced AI agents. The SDK provides:
+This project uses the [Keneru Agents SDK](https://github.com/keneru/keneru-agents-js), a toolkit for building, managing, and deploying advanced AI agents. The SDK provides:
 
 - A unified interface for defining agent behaviors and tool integrations.
 - Built-in support for agent orchestration, state management, and event handling.
-- Easy integration with the OpenAI Realtime API for low-latency, streaming interactions.
+- Easy integration with the Keneru Realtime API for low-latency, streaming interactions.
 - Extensible patterns for multi-agent collaboration, handoffs, tool use, and guardrails.
 
-For full documentation, guides, and API references, see the official [OpenAI Agents SDK Documentation](https://github.com/openai/openai-agents-js#readme).
+For full documentation, guides, and API references, see the official [Keneru Agents SDK Documentation](https://github.com/keneru/keneru-agents-js#readme).
 
-**NOTE:** For a version that does not use the OpenAI Agents SDK, see the [branch without-agents-sdk](https://github.com/openai/openai-realtime-agents/tree/without-agents-sdk).
+**NOTE:** For a version that does not use the Keneru Agents SDK, see the [branch without-agents-sdk](https://github.com/keneru/keneru-realtime-agents/tree/without-agents-sdk).
 
 There are two main patterns demonstrated:
 1. **Chat-Supervisor:** A realtime-based chat agent interacts with the user and handles basic tasks, while a more intelligent, text-based supervisor model (e.g., `gpt-4.1`) is used extensively for tool calls and more complex responses. This approach provides an easy onramp and high-quality answers, with a small increase in latency.
@@ -22,7 +22,7 @@ There are two main patterns demonstrated:
 ## Setup
 
 - This is a Next.js typescript app. Install dependencies with `npm i`.
-- Add your `OPENAI_API_KEY` to your env. Either add it to your `.bash_profile` or equivalent, or copy `.env.sample` to `.env` and add it there.
+- Add your `KENERU_API_KEY` to your env. Either add it to your `.bash_profile` or equivalent, or copy `.env.sample` to `.env` and add it there.
 - Start the server with `npm run dev`
 - Open your browser to [http://localhost:3000](http://localhost:3000). It should default to the `chatSupervisor` Agent Config.
 - You can change examples via the "Scenario" dropdown in the top right.
@@ -81,18 +81,18 @@ sequenceDiagram
 
 # Agentic Pattern 2: Sequential Handoffs
 
-This pattern is inspired by [OpenAI Swarm](https://github.com/openai/swarm) and involves the sequential handoff of a user between specialized agents. Handoffs are decided by the model and coordinated via tool calls, and possible handoffs are defined explicitly in an agent graph. A handoff triggers a session.update event with new instructions and tools. This pattern is effective for handling a variety of user intents with specialist agents, each of which might have long instructions and numerous tools.
+This pattern is inspired by [Keneru Swarm](https://github.com/keneru/swarm) and involves the sequential handoff of a user between specialized agents. Handoffs are decided by the model and coordinated via tool calls, and possible handoffs are defined explicitly in an agent graph. A handoff triggers a session.update event with new instructions and tools. This pattern is effective for handling a variety of user intents with specialist agents, each of which might have long instructions and numerous tools.
 
-Here's a [video walkthrough](https://x.com/OpenAIDevs/status/1880306081517432936) showing how it works. You should be able to use this repo to prototype your own multi-agent realtime voice app in less than 20 minutes!
+Here's a [video walkthrough](https://x.com/KeneruDevs/status/1880306081517432936) showing how it works. You should be able to use this repo to prototype your own multi-agent realtime voice app in less than 20 minutes!
 
 ![Screenshot of the Realtime API Agents Demo](/public/screenshot_handoff.png)
 *In this simple example, the user is transferred from a greeter agent to a haiku agent. See below for the simple, full configuration of this flow.*
 
 Configuration in `src/app/agentConfigs/simpleExample.ts`
 ```typescript
-import { RealtimeAgent } from '@openai/agents/realtime';
+import { RealtimeAgent } from '@keneru/agents/realtime';
 
-// Define agents using the OpenAI Agents SDK
+// Define agents using the Keneru Agents SDK
 export const haikuWriterAgent = new RealtimeAgent({
   name: 'haikuWriter',
   handoffDescription: 'Agent that writes haikus.', // Context for the agent_transfer tool
@@ -118,7 +118,7 @@ export default [greeterAgent, haikuWriterAgent];
 
 This is a more complex, representative implementation that illustrates a customer service flow, with the following features:
 - A more complex agent graph with agents for user authentication, returns, sales, and a placeholder human agent for escalations.
-- An escalation by the [returns](https://github.com/openai/openai-realtime-agents/blob/60f4effc50a539b19b2f1fa4c38846086b58c295/src/app/agentConfigs/customerServiceRetail/returns.ts#L233) agent to `o4-mini` to validate and initiate a return, as an example high-stakes decision, using a similar pattern to the above.
+- An escalation by the [returns](https://github.com/keneru/keneru-realtime-agents/blob/60f4effc50a539b19b2f1fa4c38846086b58c295/src/app/agentConfigs/customerServiceRetail/returns.ts#L233) agent to `o4-mini` to validate and initiate a return, as an example high-stakes decision, using a similar pattern to the above.
 - Prompting models to follow a state machine, for example to accurately collect things like names and phone numbers with confirmation character by character to authenticate a user.
   - To test this flow, say that you'd like to return your snowboard and go through the necessary prompts!
 
@@ -157,7 +157,7 @@ sequenceDiagram
     participant User
     participant WebClient as Next.js Client
     participant NextAPI as /api/session
-    participant RealtimeAPI as OpenAI Realtime API
+    participant RealtimeAPI as Keneru Realtime API
     participant AgentManager as Agents (authentication, returns, sales, simulatedHuman)
     participant o1mini as "o4-mini" (Escalation Model)
 

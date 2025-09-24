@@ -440,13 +440,9 @@ function App() {
           onClick={() => window.location.reload()}
         >
           <div>
-            <Image
-              src="/openai-logomark.svg"
-              alt="OpenAI Logo"
-              width={20}
-              height={20}
-              className="mr-2"
-            />
+            <div className="w-5 h-5 mr-2 flex items-center justify-center bg-blue-600 text-white rounded font-bold text-sm">
+              K
+            </div>
           </div>
           <div>
             Realtime API <span className="text-gray-500">Agents</span>
