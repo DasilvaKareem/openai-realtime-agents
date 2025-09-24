@@ -3,14 +3,23 @@ import OpenAI from 'openai';
 
 // Proxy endpoint for the OpenAI Responses API
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    if (!body) {
+      return NextResponse.json({ error: 'Empty request body' }, { status: 400 });
+    }
 
-  if (body.text?.format?.type === 'json_schema') {
-    return await structuredResponse(openai, body);
-  } else {
-    return await textResponse(openai, body);
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    if (body.text?.format?.type === 'json_schema') {
+      return await structuredResponse(openai, body);
+    } else {
+      return await textResponse(openai, body);
+    }
+  } catch (error) {
+    console.error('JSON parsing error in responses API:', error);
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
 }
 

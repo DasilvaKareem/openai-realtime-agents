@@ -3,12 +3,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
-import Image from "next/image";
 
 // UI components
 import Transcript from "./components/Transcript";
 import Events from "./components/Events";
+import ResizableWriter from "./components/ResizableWriter";
 import BottomToolbar from "./components/BottomToolbar";
+import { setGlobalWriterState } from "./lib/writerPanelTools";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -105,18 +106,13 @@ function App() {
   const [sessionStatus, setSessionStatus] =
     useState<SessionStatus>("DISCONNECTED");
 
-  const [isEventsPaneExpanded, setIsEventsPaneExpanded] =
-    useState<boolean>(true);
+  const [isEventsPaneExpanded, setIsEventsPaneExpanded] = useState<boolean>(true);
+  const [isWriterExpanded, setIsWriterExpanded] = useState<boolean>(false);
+  const [writerWidth, setWriterWidth] = useState<number>(470);
   const [userText, setUserText] = useState<string>("");
   const [isPTTActive, setIsPTTActive] = useState<boolean>(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
-  const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] = useState<boolean>(
-    () => {
-      if (typeof window === 'undefined') return true;
-      const stored = localStorage.getItem('audioPlaybackEnabled');
-      return stored ? stored === 'true' : true;
-    },
-  );
+  const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] = useState<boolean>(true);
 
   // Initialize the recording hook.
   const { startRecording, stopRecording, downloadRecording } =
@@ -371,9 +367,50 @@ function App() {
     localStorage.setItem("pushToTalkUI", isPTTActive.toString());
   }, [isPTTActive]);
 
+  // Initialize state from localStorage after hydration
+  useEffect(() => {
+    const storedLogsExpanded = localStorage.getItem('logsExpanded');
+    if (storedLogsExpanded !== null) {
+      setIsEventsPaneExpanded(storedLogsExpanded === 'true');
+    }
+
+    const storedWriterExpanded = localStorage.getItem('writerExpanded');
+    if (storedWriterExpanded !== null) {
+      setIsWriterExpanded(storedWriterExpanded === 'true');
+    }
+
+    const storedWriterWidth = localStorage.getItem('writerWidth');
+    if (storedWriterWidth !== null) {
+      setWriterWidth(parseInt(storedWriterWidth, 10));
+    }
+
+    const storedAudioPlayback = localStorage.getItem('audioPlaybackEnabled');
+    if (storedAudioPlayback !== null) {
+      setIsAudioPlaybackEnabled(storedAudioPlayback === 'true');
+    }
+  }, []);
+
   useEffect(() => {
     localStorage.setItem("logsExpanded", isEventsPaneExpanded.toString());
   }, [isEventsPaneExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem("writerExpanded", isWriterExpanded.toString());
+  }, [isWriterExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem("writerWidth", writerWidth.toString());
+  }, [writerWidth]);
+
+  // Register writer panel state with tools
+  useEffect(() => {
+    setGlobalWriterState({
+      isExpanded: isWriterExpanded,
+      setIsExpanded: setIsWriterExpanded,
+      width: writerWidth,
+      setWidth: setWriterWidth
+    });
+  }, [isWriterExpanded, setIsWriterExpanded, writerWidth, setWriterWidth]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -433,30 +470,37 @@ function App() {
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
   return (
-    <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
-      <div className="p-5 text-lg font-semibold flex justify-between items-center">
+    <div className="text-base flex flex-col h-screen bg-snes-bg-primary text-snes-text-primary relative">
+      <div className="p-5 text-lg font-semibold flex justify-between items-center snes-panel mx-2 mt-2">
         <div
-          className="flex items-center cursor-pointer"
+          className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => window.location.reload()}
         >
-          <div>
-            <div className="w-5 h-5 mr-2 flex items-center justify-center bg-blue-600 text-white rounded font-bold text-sm">
+          <div className="flex items-center">
+            <div className="w-6 h-6 mr-3 flex items-center justify-center bg-snes-accent-green text-white rounded-snes-sm font-bold text-sm snes-led-active">
               K
             </div>
+            <div className={`snes-led-indicator ${
+              sessionStatus === "CONNECTED" 
+                ? "active" 
+                : sessionStatus === "CONNECTING" 
+                  ? "pulse" 
+                  : ""
+            }`}></div>
           </div>
-          <div>
-            Realtime API <span className="text-gray-500">Agents</span>
+          <div className="snes-header text-lg">
+            Realtime API <span className="text-snes-text-secondary">Agents</span>
           </div>
         </div>
-        <div className="flex items-center">
-          <label className="flex items-center text-base gap-1 mr-2 font-medium">
-            Scenario
-          </label>
-          <div className="relative inline-block">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <label className="snes-label text-sm">
+              Scenario
+            </label>
             <select
               value={agentSetKey}
               onChange={handleAgentChange}
-              className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
+              className="snes-select text-sm min-w-32"
             >
               {Object.keys(allAgentSets).map((agentKey) => (
                 <option key={agentKey} value={agentKey}>
@@ -464,63 +508,48 @@ function App() {
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
-              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.44l3.71-3.21a.75.75 0 111.04 1.08l-4.25 3.65a.75.75 0 01-1.04 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
           </div>
 
           {agentSetKey && (
-            <div className="flex items-center ml-6">
-              <label className="flex items-center text-base gap-1 mr-2 font-medium">
+            <div className="flex items-center gap-2">
+              <label className="snes-label text-sm">
                 Agent
               </label>
-              <div className="relative inline-block">
-                <select
-                  value={selectedAgentName}
-                  onChange={handleSelectedAgentChange}
-                  className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
-                >
-                  {selectedAgentConfigSet?.map((agent) => (
-                    <option key={agent.name} value={agent.name}>
-                      {agent.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.44l3.71-3.21a.75.75 0 111.04 1.08l-4.25 3.65a.75.75 0 01-1.04 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
+              <select
+                value={selectedAgentName}
+                onChange={handleSelectedAgentChange}
+                className="snes-select text-sm min-w-32"
+              >
+                {selectedAgentConfigSet?.map((agent) => (
+                  <option key={agent.name} value={agent.name}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
         </div>
       </div>
 
       <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
-        <Transcript
-          userText={userText}
-          setUserText={setUserText}
-          onSendMessage={handleSendTextMessage}
-          downloadRecording={downloadRecording}
-          canSend={
-            sessionStatus === "CONNECTED"
-          }
-        />
+        <div className="flex flex-1 gap-2">
+          <Transcript
+            userText={userText}
+            setUserText={setUserText}
+            onSendMessage={handleSendTextMessage}
+            downloadRecording={downloadRecording}
+            canSend={
+              sessionStatus === "CONNECTED"
+            }
+          />
+
+          {isWriterExpanded && (
+            <ResizableWriter
+              width={writerWidth}
+              onWidthChange={setWriterWidth}
+            />
+          )}
+        </div>
 
         <Events isExpanded={isEventsPaneExpanded} />
       </div>
@@ -535,6 +564,8 @@ function App() {
         handleTalkButtonUp={handleTalkButtonUp}
         isEventsPaneExpanded={isEventsPaneExpanded}
         setIsEventsPaneExpanded={setIsEventsPaneExpanded}
+        isWriterExpanded={isWriterExpanded}
+        setIsWriterExpanded={setIsWriterExpanded}
         isAudioPlaybackEnabled={isAudioPlaybackEnabled}
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
         codec={urlCodec}

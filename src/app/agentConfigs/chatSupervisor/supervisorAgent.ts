@@ -1,11 +1,15 @@
 import { RealtimeItem, tool } from '@openai/agents/realtime';
 
-
 import {
   exampleAccountInfo,
   examplePolicyDocs,
   exampleStoreLocations,
 } from './sampleData';
+
+import { imageGenerationTools, imageGenerationToolDefinitions } from '../../lib/imageGeneration';
+import { thirdwebWalletTools, thirdwebWalletToolDefinitions } from '../../lib/thirdwebWallet';
+import { tiptapTools, tiptapToolDefinitions } from '../../lib/tiptapTools';
+import { writerPanelTools, writerPanelToolDefinitions } from '../../lib/writerPanelTools';
 
 export const supervisorAgentInstructions = `You are an expert customer service supervisor agent, tasked with providing real-time guidance to a more junior agent that's chatting directly with the customer. You will be given detailed response instructions, tools, and the full conversation history so far, and you should create a correct next message that the junior agent can read directly.
 
@@ -15,15 +19,22 @@ export const supervisorAgentInstructions = `You are an expert customer service s
 - Your message will be read verbatim by the junior agent, so feel free to use it like you would talk directly to the user
   
 ==== Domain-Specific Agent Instructions ====
-You are a helpful customer service agent working for NewTelco, helping a user efficiently fulfill their request while adhering closely to provided guidelines.
+You are a helpful AI assistant named Keneru, working for Kareem. You can help with a wide variety of tasks including customer service, general questions, image generation using DALL-E 3, blockchain wallet management using Thirdweb, writing/editing documents using the Tiptap editor, and posting tweets to X/Twitter.
 
 # Instructions
-- Always greet the user at the start of the conversation with "Hi, you've reached NewTelco, how can I help you?"
-- Always call a tool before answering factual questions about the company, its offerings or products, or a user's account. Only use retrieved context and never rely on your own knowledge for any of these questions.
-- Escalate to a human if the user requests.
-- Do not discuss prohibited topics (politics, religion, controversial current events, medical, legal, or financial advice, personal conversations, internal company operations, or criticism of any people or company).
-- Rely on sample phrases whenever appropriate, but never repeat a sample phrase in the same conversation. Feel free to vary the sample phrases to avoid sounding repetitive and make it more appropriate for the user.
-- Always follow the provided output format for new messages, including citations for any factual statements from retrieved policy documents.
+- Always greet the user at the start of the conversation with "Hi Kareem, I'm Keneru. How can I assist you today?"
+- For image generation requests, use the generateImage tool to create images with DALL-E 3. When successful, provide the image URL to the user. If there's an error, explain what went wrong and suggest alternatives.
+- For blockchain/wallet requests, use the Thirdweb wallet tools to manage wallets, send tokens, check balances, etc.
+- For tweet posting requests, use the postTweet tool to post content to X/Twitter. Ensure the text is under 280 characters.
+- IMPORTANT: For ANY writing/editing requests (articles, documents, stories, notes, lists, etc.), you MUST:
+  1. FIRST use openWriterPanel() to automatically open the Writer panel
+  2. THEN use the Tiptap editor tools to write/edit content
+  3. Always tell the user the Writer panel has been opened for them
+- For customer service questions, use the appropriate tools to get accurate information
+- Escalate to a human if the user requests
+- Do not discuss prohibited topics (politics, religion, controversial current events, medical, legal, or financial advice, personal conversations, internal company operations, or criticism of any people or company)
+- Rely on sample phrases whenever appropriate, but never repeat a sample phrase in the same conversation. Feel free to vary the sample phrases to avoid sounding repetitive and make it more appropriate for the user
+- Always follow the provided output format for new messages, including citations for any factual statements from retrieved documents
 
 # Response Instructions
 - Maintain a professional and concise tone in all responses.
@@ -145,6 +156,14 @@ export const supervisorAgentTools = [
       additionalProperties: false,
     },
   },
+  // Image generation tools
+  ...imageGenerationToolDefinitions,
+  // Thirdweb wallet tools
+  ...thirdwebWalletToolDefinitions,
+  // Writer panel control tools
+  ...writerPanelToolDefinitions,
+  // Tiptap editor tools
+  ...tiptapToolDefinitions,
 ];
 
 async function fetchResponsesMessage(body: any) {
@@ -166,7 +185,7 @@ async function fetchResponsesMessage(body: any) {
   return completion;
 }
 
-function getToolResponse(fName: string) {
+async function getToolResponse(fName: string, args: any) {
   switch (fName) {
     case "getUserAccountInfo":
       return exampleAccountInfo;
@@ -174,6 +193,50 @@ function getToolResponse(fName: string) {
       return examplePolicyDocs;
     case "findNearestStore":
       return exampleStoreLocations;
+    case "generateImage":
+      return await imageGenerationTools.generateImage({ prompt: args.prompt, size: args.size || '1024x1024' });
+    case "generateImageVariation":
+      return await imageGenerationTools.generateImageVariation({ imageUrl: args.imageUrl, size: args.size || '1024x1024' });
+    case "initializeWallet":
+      return await thirdwebWalletTools.initializeWallet(args.privateKey);
+    case "getWalletInfo":
+      return await thirdwebWalletTools.getWalletInfo();
+    case "switchChain":
+      return await thirdwebWalletTools.switchChain(args.chainId);
+    case "sendNativeToken":
+      return await thirdwebWalletTools.sendNativeToken(args.to, args.amount);
+    case "getTokenBalance":
+      return await thirdwebWalletTools.getTokenBalance(args.tokenAddress);
+    case "sendToken":
+      return await thirdwebWalletTools.sendToken(args.tokenAddress, args.to, args.amount);
+    case "disconnectWallet":
+      return await thirdwebWalletTools.disconnectWallet();
+    case "writeContent":
+      return await tiptapTools.writeContent(args);
+    case "insertAtCursor":
+      return await tiptapTools.insertAtCursor(args);
+    case "createHeading":
+      return await tiptapTools.createHeading(args);
+    case "createList":
+      return await tiptapTools.createList(args);
+    case "addCodeBlock":
+      return await tiptapTools.addCodeBlock(args);
+    case "getContent":
+      return await tiptapTools.getContent();
+    case "clearContent":
+      return await tiptapTools.clearContent();
+    case "openWriterPanel":
+      return await writerPanelTools.openWriterPanel(args);
+    case "closeWriterPanel":
+      return await writerPanelTools.closeWriterPanel();
+    case "toggleWriterPanel":
+      return await writerPanelTools.toggleWriterPanel();
+    case "getWriterPanelStatus":
+      return await writerPanelTools.getWriterPanelStatus();
+    case "resizeWriterPanel":
+      return await writerPanelTools.resizeWriterPanel(args);
+    case "postTweet":
+      return await writerPanelTools.postTweet(args);
     default:
       return { result: true };
   }
@@ -222,7 +285,7 @@ async function handleToolCalls(
     for (const toolCall of functionCalls) {
       const fName = toolCall.name;
       const args = JSON.parse(toolCall.arguments || '{}');
-      const toolRes = getToolResponse(fName);
+      const toolRes = await getToolResponse(fName, args);
 
       // Since we're using a local function, we don't need to add our own breadcrumbs
       if (addBreadcrumb) {

@@ -2,21 +2,574 @@
 @tailwind components;
 @tailwind utilities;
 
+/* SNES Synthesizer Design System */
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
+  /* Primary Colors */
+  --bg-primary: #f3f5f4;        /* light gray, neutral base */
+  --bg-secondary: #e0dbd9;      /* panels/cards */
+  --border: #b6b2b0;            /* borders / dividers */
+  --text-primary: #2a292a;      /* body text */
+  --text-secondary: #767372;    /* secondary text / labels */
+  --text-muted: #9b9896;        /* disabled / muted */
+  --accent-green: #228B22;      /* buttons / accents (Dark Green) */
+  --accent-green-hover: #7CFC00; /* buttons hover / glow (Light Green) */
+  --accent-red: #d9472f;        /* error / alert (Retro Red) */
+  --border-dark: #504d4d;       /* hard outlines for buttons */
+  
+  /* Legacy support */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Font imports - using system fonts that match the retro aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* SNES Synthesizer Component Styles */
+.snes-panel {
+  background: var(--bg-secondary);
+  border: 2px solid var(--text-muted);
+  border-radius: 6px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
+.snes-button {
+  background: var(--accent-green);
+  color: white;
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: 'Orbitron', 'Chicago', 'Arial Black', sans-serif;
+  font-weight: 700;
+}
+
+.snes-button-active {
+  background: var(--accent-green-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--accent-green) !important;
+  box-shadow: inset 0 2px 4px rgba(124, 252, 0, 0.3) !important;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.snes-button:hover {
+  background: var(--accent-green-hover);
+  box-shadow: 0 0 8px var(--accent-green-hover), 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.snes-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.snes-button:disabled {
+  background: var(--text-muted);
+  color: var(--bg-primary);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.snes-header {
+  font-family: 'Orbitron', 'Chicago', 'Arial Black', sans-serif;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.snes-label {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.snes-input {
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.snes-input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 2px rgba(34, 139, 34, 0.2);
+}
+
+.snes-select {
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: var(--text-primary);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23767372' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+.snes-select:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 2px rgba(34, 139, 34, 0.2);
+}
+
+/* Green LED glow effect for active states */
+.snes-led-active {
+  box-shadow: 0 0 12px var(--accent-green-hover), 0 0 24px rgba(124, 252, 0, 0.3);
+  background: var(--accent-green-hover);
+}
+
+.snes-led-pulse {
+  animation: snes-pulse 2s infinite;
+}
+
+@keyframes snes-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px var(--accent-green-hover), 0 0 16px rgba(124, 252, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 16px var(--accent-green-hover), 0 0 32px rgba(124, 252, 0, 0.4);
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+/* Checkbox styling */
+.snes-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.snes-checkbox:checked {
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.snes-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.snes-checkbox:checked:not(:disabled) {
+  box-shadow: 0 0 8px var(--accent-green-hover);
+}
+
+/* Message bubbles with SNES styling */
+.snes-message-user {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border: 2px solid var(--border-dark);
+  border-radius: 8px 8px 4px 8px;
+}
+
+.snes-message-assistant {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+  border-radius: 8px 8px 8px 4px;
+}
+
+/* Status indicators */
+.snes-status-connected {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green-hover);
+}
+
+.snes-status-connecting {
+  background: var(--accent-red);
+  animation: snes-pulse 1.5s infinite;
+}
+
+.snes-status-disconnected {
+  background: var(--text-muted);
+}
+
+/* Additional retro effects */
+.snes-panel:hover {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--accent-green-hover);
+}
+
+.snes-button:focus {
+  outline: 2px solid var(--accent-green-hover);
+  outline-offset: 2px;
+}
+
+.snes-input:focus {
+  box-shadow: 0 0 0 2px var(--accent-green), 0 0 8px rgba(124, 252, 0, 0.2);
+}
+
+.snes-select:focus {
+  box-shadow: 0 0 0 2px var(--accent-green), 0 0 8px rgba(124, 252, 0, 0.2);
+}
+
+/* Retro scanline effect for panels */
+.snes-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    transparent 50%,
+    rgba(124, 252, 0, 0.03) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Glitch effect for error states */
+@keyframes snes-glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+.snes-error {
+  animation: snes-glitch 0.3s infinite;
+  color: var(--accent-red);
+}
+
+/* Retro button press effect */
+.snes-button:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* LED indicator styles */
+.snes-led-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  display: inline-block;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+}
+
+.snes-led-indicator.active {
+  background: var(--accent-green-hover);
+  box-shadow: 0 0 8px var(--accent-green-hover);
+}
+
+.snes-led-indicator.pulse {
+  animation: snes-pulse 2s infinite;
+}
+
+/* Retro scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-green);
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-green-hover);
+  box-shadow: 0 0 4px var(--accent-green-hover);
+}
+
+/* Terminal-style text selection */
+::selection {
+  background: var(--accent-green-hover);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: var(--accent-green-hover);
+  color: var(--text-primary);
+}
+
+/* Retro sound wave effect for active states */
+@keyframes snes-sound-wave {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50% { opacity: 1; transform: scaleY(1.2); }
+}
+
+.snes-sound-wave {
+  position: relative;
+}
+
+.snes-sound-wave::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  width: 3px;
+  height: 20px;
+  background: var(--accent-green-hover);
+  transform: translateY(-50%);
+  animation: snes-sound-wave 0.5s infinite;
+  border-radius: 2px;
+}
+
+.snes-sound-wave::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -15px;
+  width: 2px;
+  height: 15px;
+  background: var(--accent-green);
+  transform: translateY(-50%);
+  animation: snes-sound-wave 0.5s infinite 0.1s;
+  border-radius: 1px;
+}
+
+/* Retro loading spinner */
+@keyframes snes-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.snes-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--text-muted);
+  border-top: 2px solid var(--accent-green-hover);
+  border-radius: 50%;
+  animation: snes-spin 1s linear infinite;
+}
+
+/* SNES-style focus ring */
+.snes-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 252, 0, 0.3), 0 0 0 1px var(--accent-green);
+}
+
+/* Tiptap Editor Styles */
+.ProseMirror {
+  padding: 1rem;
+  min-height: 400px;
+  outline: none;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+}
+
+.ProseMirror > * + * {
+  margin-top: 0.75em;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 0;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25em;
+  font-weight: bold;
+}
+
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.ProseMirror code {
+  background-color: var(--bg-secondary);
+  color: var(--accent-green);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
+.ProseMirror pre {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+}
+
+.ProseMirror pre code {
+  color: inherit;
+  padding: 0;
+  background: none;
+  font-size: 0.875rem;
+}
+
+.ProseMirror mark {
+  background-color: var(--accent-green-hover);
+  color: var(--text-primary);
+  padding: 0.1rem 0.2rem;
+  border-radius: 2px;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding: 0 1rem;
+}
+
+.ProseMirror blockquote {
+  padding-left: 1rem;
+  border-left: 4px solid var(--accent-green);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* Task list styles */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] p {
+  margin: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+
+/* Placeholder styles */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Bubble menu styles */
+.bubble-menu,
+.floating-menu {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* AI Change Highlighting */
+.ai-change-new {
+  background-color: rgba(124, 252, 0, 0.2);
+  color: var(--text-primary);
+  border-radius: 2px;
+  padding: 0.1rem 0.2rem;
+  animation: ai-highlight-pulse 2s ease-out;
+}
+
+.ai-change-modified {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: var(--text-primary);
+  border-radius: 2px;
+  padding: 0.1rem 0.2rem;
+  animation: ai-highlight-pulse 2s ease-out;
+}
+
+.ai-change-deleted {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: var(--text-primary);
+  text-decoration: line-through;
+  border-radius: 2px;
+  padding: 0.1rem 0.2rem;
+}
+
+/* Animation for highlighting AI changes */
+@keyframes ai-highlight-pulse {
+  0% {
+    background-color: rgba(124, 252, 0, 0.6);
+    transform: scale(1.02);
+  }
+  50% {
+    background-color: rgba(124, 252, 0, 0.4);
+  }
+  100% {
+    background-color: rgba(124, 252, 0, 0.2);
+    transform: scale(1);
+  }
+}
+
+/* AI Change indicator in status bar */
+.ai-activity-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-green);
+  animation: ai-activity-blink 1s infinite;
+}
+
+@keyframes ai-activity-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.5; }
 }

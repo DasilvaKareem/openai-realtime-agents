@@ -41,26 +41,26 @@ export function GuardrailChip({
     case "PENDING":
       IconComponent = ClockIcon;
       label = "Pending";
-      textColorClass = "text-gray-600";
+      textColorClass = "text-snes-text-muted";
       break;
     case "PASS":
       IconComponent = CheckCircledIcon;
       label = "Pass";
-      textColorClass = "text-green-600";
+      textColorClass = "text-snes-accent-green";
       break;
     case "FAIL":
       IconComponent = CrossCircledIcon;
       label = "Fail";
-      textColorClass = "text-red-500";
+      textColorClass = "text-snes-accent-red";
       break;
     default:
       IconComponent = ClockIcon;
       label = "Pending";
-      textColorClass = "text-gray-600";
+      textColorClass = "text-snes-text-muted";
   }
 
   return (
-    <div className="text-xs">
+    <div className="text-xs font-snes-body">
       <div
         onClick={() => {
           // Only allow toggling the expanded state for PASS/FAIL cases.
@@ -69,11 +69,11 @@ export function GuardrailChip({
           }
         }}
         // Only add pointer cursor if clickable (PASS or FAIL state)
-        className={`inline-flex items-center gap-1 rounded ${
-          state !== "PENDING" ? "cursor-pointer" : ""
+        className={`inline-flex items-center gap-1 rounded-snes-sm ${
+          state !== "PENDING" ? "cursor-pointer hover:bg-snes-bg-primary px-2 py-1" : ""
         }`}
       >
-        Guardrail:
+        <span className="snes-label">Guardrail:</span>
         <div className={`flex items-center gap-1 ${textColorClass}`}>
           <IconComponent /> {label}
         </div>
@@ -86,12 +86,12 @@ export function GuardrailChip({
           }`}
         >
           <div className="pt-2 text-xs">
-            <strong>
+            <strong className="text-snes-text-primary">
               Moderation Category: {formatCategory(guardrailResult.category)}
             </strong>
-            <div>{guardrailResult.rationale}</div>
+            <div className="text-snes-text-primary">{guardrailResult.rationale}</div>
             {guardrailResult.testText && (
-              <blockquote className="mt-1 border-l-2 border-gray-300 pl-2 text-gray-400">
+              <blockquote className="mt-1 border-l-2 border-snes-border pl-2 text-snes-text-muted">
                 {guardrailResult.testText}
               </blockquote>
             )}

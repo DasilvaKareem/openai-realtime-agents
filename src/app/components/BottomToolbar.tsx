@@ -11,6 +11,8 @@ interface BottomToolbarProps {
   handleTalkButtonUp: () => void;
   isEventsPaneExpanded: boolean;
   setIsEventsPaneExpanded: (val: boolean) => void;
+  isWriterExpanded: boolean;
+  setIsWriterExpanded: (val: boolean) => void;
   isAudioPlaybackEnabled: boolean;
   setIsAudioPlaybackEnabled: (val: boolean) => void;
   codec: string;
@@ -27,6 +29,8 @@ function BottomToolbar({
   handleTalkButtonUp,
   isEventsPaneExpanded,
   setIsEventsPaneExpanded,
+  isWriterExpanded,
+  setIsWriterExpanded,
   isAudioPlaybackEnabled,
   setIsAudioPlaybackEnabled,
   codec,
@@ -47,19 +51,23 @@ function BottomToolbar({
   }
 
   function getConnectionButtonClasses() {
-    const baseClasses = "text-white text-base p-2 w-36 rounded-md h-full";
+    const baseClasses = "snes-button text-sm w-36 h-10";
     const cursorClass = isConnecting ? "cursor-not-allowed" : "cursor-pointer";
 
     if (isConnected) {
-      // Connected -> label "Disconnect" -> red
-      return `bg-red-600 hover:bg-red-700 ${cursorClass} ${baseClasses}`;
+      // Connected -> label "Disconnect" -> red with LED effect
+      return `bg-snes-accent-red hover:bg-red-600 ${cursorClass} ${baseClasses} snes-led-active`;
     }
-    // Disconnected or connecting -> label is either "Connect" or "Connecting" -> black
-    return `bg-black hover:bg-gray-900 ${cursorClass} ${baseClasses}`;
+    if (isConnecting) {
+      // Connecting -> pulsing red
+      return `bg-snes-accent-red ${cursorClass} ${baseClasses} animate-snes-pulse-fast`;
+    }
+    // Disconnected -> green
+    return `bg-snes-accent-green hover:bg-snes-accent-green-hover ${cursorClass} ${baseClasses}`;
   }
 
   return (
-    <div className="p-4 flex flex-row items-center justify-center gap-x-8">
+    <div className="snes-panel mx-2 mb-2 p-4 flex flex-row items-center justify-center gap-x-8">
       <button
         onClick={onToggleConnection}
         className={getConnectionButtonClasses()}
@@ -68,18 +76,18 @@ function BottomToolbar({
         {getConnectionButtonLabel()}
       </button>
 
-      <div className="flex flex-row items-center gap-2">
+      <div className="flex flex-row items-center gap-3">
         <input
           id="push-to-talk"
           type="checkbox"
           checked={isPTTActive}
           onChange={(e) => setIsPTTActive(e.target.checked)}
           disabled={!isConnected}
-          className="w-4 h-4"
+          className="snes-checkbox"
         />
         <label
           htmlFor="push-to-talk"
-          className="flex items-center cursor-pointer"
+          className="snes-label cursor-pointer"
         >
           Push to talk
         </label>
@@ -89,48 +97,63 @@ function BottomToolbar({
           onTouchStart={handleTalkButtonDown}
           onTouchEnd={handleTalkButtonUp}
           disabled={!isPTTActive}
-          className={
-            (isPTTUserSpeaking ? "bg-gray-300" : "bg-gray-200") +
-            " py-1 px-4 cursor-pointer rounded-md" +
-            (!isPTTActive ? " bg-gray-100 text-gray-400" : "")
-          }
+          className={`snes-button text-sm px-4 py-2 ${
+            isPTTUserSpeaking 
+              ? "snes-led-active snes-sound-wave" 
+              : isPTTActive 
+                ? "hover:bg-snes-accent-green-hover" 
+                : "opacity-50 cursor-not-allowed"
+          }`}
         >
           Talk
         </button>
       </div>
 
-      <div className="flex flex-row items-center gap-1">
+      <div className="flex flex-row items-center gap-3">
         <input
           id="audio-playback"
           type="checkbox"
           checked={isAudioPlaybackEnabled}
           onChange={(e) => setIsAudioPlaybackEnabled(e.target.checked)}
           disabled={!isConnected}
-          className="w-4 h-4"
+          className="snes-checkbox"
         />
         <label
           htmlFor="audio-playback"
-          className="flex items-center cursor-pointer"
+          className="snes-label cursor-pointer"
         >
           Audio playback
         </label>
       </div>
 
-      <div className="flex flex-row items-center gap-2">
+      <div className="flex flex-row items-center gap-3">
         <input
           id="logs"
           type="checkbox"
           checked={isEventsPaneExpanded}
           onChange={(e) => setIsEventsPaneExpanded(e.target.checked)}
-          className="w-4 h-4"
+          className="snes-checkbox"
         />
-        <label htmlFor="logs" className="flex items-center cursor-pointer">
+        <label htmlFor="logs" className="snes-label cursor-pointer">
           Logs
         </label>
       </div>
 
+      <div className="flex flex-row items-center gap-3">
+        <input
+          id="writer"
+          type="checkbox"
+          checked={isWriterExpanded}
+          onChange={(e) => setIsWriterExpanded(e.target.checked)}
+          className="snes-checkbox"
+        />
+        <label htmlFor="writer" className="snes-label cursor-pointer">
+          Writer
+        </label>
+      </div>
+
       <div className="flex flex-row items-center gap-2">
-        <div>Codec:</div>
+        <span className="snes-label">Codec:</span>
         {/*
           Codec selector – Lets you force the WebRTC track to use 8 kHz 
           PCMU/PCMA so you can preview how the agent will sound 
@@ -143,7 +166,7 @@ function BottomToolbar({
           id="codec-select"
           value={codec}
           onChange={handleCodecChange}
-          className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none cursor-pointer"
+          className="snes-select text-sm"
         >
           <option value="opus">Opus (48 kHz)</option>
           <option value="pcmu">PCMU (8 kHz)</option>

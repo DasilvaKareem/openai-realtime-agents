@@ -71,21 +71,21 @@ function Transcript({
   };
 
   return (
-    <div className="flex flex-col flex-1 bg-white min-h-0 rounded-xl">
+    <div className="flex flex-col flex-1 snes-panel min-h-0">
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b bg-white rounded-t-xl">
-          <span className="font-semibold">Transcript</span>
+        <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b-2 border-snes-border bg-snes-bg-secondary">
+          <span className="snes-header text-lg">Transcript</span>
           <div className="flex gap-x-2">
             <button
               onClick={handleCopyTranscript}
-              className="w-24 text-sm px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center gap-x-1"
+              className="snes-button text-xs px-3 py-1 flex items-center justify-center gap-x-1"
             >
               <ClipboardCopyIcon />
               {justCopied ? "Copied!" : "Copy"}
             </button>
             <button
               onClick={downloadRecording}
-              className="w-40 text-sm px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center gap-x-1"
+              className="snes-button text-xs px-3 py-1 flex items-center justify-center gap-x-1"
             >
               <DownloadIcon />
               <span>Download Audio</span>
@@ -123,12 +123,12 @@ function Transcript({
                 isUser ? "items-end" : "items-start"
               }`;
               const bubbleBase = `max-w-lg p-3 ${
-                isUser ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-black"
+                isUser ? "snes-message-user" : "snes-message-assistant"
               }`;
               const isBracketedMessage =
                 title.startsWith("[") && title.endsWith("]");
               const messageStyle = isBracketedMessage
-                ? 'italic text-gray-400'
+                ? 'italic text-snes-text-muted'
                 : '';
               const displayTitle = isBracketedMessage
                 ? title.slice(1, -1)
@@ -138,23 +138,23 @@ function Transcript({
                 <div key={itemId} className={containerClasses}>
                   <div className="max-w-lg">
                     <div
-                      className={`${bubbleBase} rounded-t-xl ${
-                        guardrailResult ? "" : "rounded-b-xl"
+                      className={`${bubbleBase} ${
+                        guardrailResult ? "rounded-t-snes" : "rounded-snes"
                       }`}
                     >
                       <div
                         className={`text-xs ${
-                          isUser ? "text-gray-400" : "text-gray-500"
-                        } font-mono`}
+                          isUser ? "text-snes-text-muted" : "text-snes-text-secondary"
+                        } font-snes-body`}
                       >
                         {timestamp}
                       </div>
-                      <div className={`whitespace-pre-wrap ${messageStyle}`}>
+                      <div className={`whitespace-pre-wrap ${messageStyle} font-snes-body`}>
                         <ReactMarkdown>{displayTitle}</ReactMarkdown>
                       </div>
                     </div>
                     {guardrailResult && (
-                      <div className="bg-gray-200 px-3 py-2 rounded-b-xl">
+                      <div className="bg-snes-bg-primary px-3 py-2 rounded-b-snes border-2 border-t-0 border-snes-border">
                         <GuardrailChip guardrailResult={guardrailResult} />
                       </div>
                     )}
@@ -165,18 +165,18 @@ function Transcript({
               return (
                 <div
                   key={itemId}
-                  className="flex flex-col justify-start items-start text-gray-500 text-sm"
+                  className="flex flex-col justify-start items-start text-snes-text-secondary text-sm"
                 >
-                  <span className="text-xs font-mono">{timestamp}</span>
+                  <span className="text-xs font-snes-body">{timestamp}</span>
                   <div
-                    className={`whitespace-pre-wrap flex items-center font-mono text-sm text-gray-800 ${
-                      data ? "cursor-pointer" : ""
+                    className={`whitespace-pre-wrap flex items-center font-snes-body text-sm text-snes-text-primary ${
+                      data ? "cursor-pointer hover:text-snes-accent-green" : ""
                     }`}
                     onClick={() => data && toggleTranscriptItemExpand(itemId)}
                   >
                     {data && (
                       <span
-                        className={`text-gray-400 mr-1 transform transition-transform duration-200 select-none font-mono ${
+                        className={`text-snes-text-muted mr-1 transform transition-transform duration-200 select-none font-snes-body ${
                           expanded ? "rotate-90" : "rotate-0"
                         }`}
                       >
@@ -186,8 +186,8 @@ function Transcript({
                     {title}
                   </div>
                   {expanded && data && (
-                    <div className="text-gray-800 text-left">
-                      <pre className="border-l-2 ml-1 border-gray-200 whitespace-pre-wrap break-words font-mono text-xs mb-2 mt-2 pl-2">
+                    <div className="text-snes-text-primary text-left">
+                      <pre className="border-l-2 ml-1 border-snes-border whitespace-pre-wrap break-words font-snes-body text-xs mb-2 mt-2 pl-2">
                         {JSON.stringify(data, null, 2)}
                       </pre>
                     </div>
@@ -199,7 +199,7 @@ function Transcript({
               return (
                 <div
                   key={itemId}
-                  className="flex justify-center text-gray-500 text-sm italic font-mono"
+                  className="flex justify-center text-snes-text-secondary text-sm italic font-snes-body"
                 >
                   Unknown item type: {type}{" "}
                   <span className="ml-2 text-xs">{timestamp}</span>
@@ -210,7 +210,7 @@ function Transcript({
         </div>
       </div>
 
-      <div className="p-4 flex items-center gap-x-2 flex-shrink-0 border-t border-gray-200">
+      <div className="p-4 flex items-center gap-x-2 flex-shrink-0 border-t-2 border-snes-border">
         <input
           ref={inputRef}
           type="text"
@@ -221,15 +221,19 @@ function Transcript({
               onSendMessage();
             }
           }}
-          className="flex-1 px-4 py-2 focus:outline-none"
+          className="snes-input flex-1 font-snes-body"
           placeholder="Type a message..."
         />
         <button
           onClick={onSendMessage}
           disabled={!canSend || !userText.trim()}
-          className="bg-gray-900 text-white rounded-full px-2 py-2 disabled:opacity-50"
+          className={`snes-button px-3 py-2 ${
+            canSend && userText.trim() 
+              ? "hover:bg-snes-accent-green-hover" 
+              : "opacity-50 cursor-not-allowed"
+          }`}
         >
-          <Image src="arrow.svg" alt="Send" width={24} height={24} />
+          <Image src="arrow.svg" alt="Send" width={20} height={20} />
         </button>
       </div>
     </div>
